@@ -1,3 +1,56 @@
+# TÜRKÇE
+# Encryption-and-Decryption-of-Data-Embedded-in-Visual-Content
+
+Detaylı bilgi için ekteki `Cryptography Project Report` raporunu inceleyiniz.
+
+## Geliştiriciler İçin:
+
+### Ana Fonksiyon (`main`)
+
+- Kullanıcıya resim dosya adını ve ekleme veya çıkarma işlem türünü girmesine izin verir.
+- `encryptData` fonksiyonu, kullanıcının kişisel bilgilerini çıkarır, şifreler ve bunu resmin içine gömer.
+- `extractMessage` fonksiyonu, resimden şifreli veriyi çıkarır, şifresini çözer ve kullanıcıya gösterir.
+
+### Veri Şifreleme ve Şifre Çözme Fonksiyonları (`vernamEncrypt`, `vernamDecrypt`)
+
+- `vernamEncrypt` fonksiyonu metni Vernam şifreleme algoritması kullanarak şifreler.
+- `vernamDecrypt` fonksiyonu şifreli metni çözer.
+
+### Resim İşleme Fonksiyonları (`embedMessage`, `extractMessage`, `embedRandomKey`, `extractRandomKey`)
+
+- `embedMessage` fonksiyonu şifreli metni resmin içine gömer.
+- `extractMessage` fonksiyonu resimden şifreli metni çıkarır ve çözer.
+- `embedRandomKey` ve `extractRandomKey` fonksiyonları rastgele anahtarı resme gömer ve çıkarır.
+
+### Diğer Yardımcı Fonksiyonlar (`printHex`, `stringLength`, `printSeparatedData`, `generateRandomKey`)
+
+- `printHex` fonksiyonu veriyi onaltılık formatta yazdırır.
+- `stringLength` fonksiyonu bir dizinin uzunluğunu hesaplar.
+- `printSeparatedData` fonksiyonu ekrana ayrılmış veriyi yazdırır.
+- `generateRandomKey` fonksiyonu belirli bir uzunluktaki rastgele bir anahtar üretir.
+
+### ADMIN_DEBUG Özellikleri:
+
+1. **vernamEncrypt ve vernamDecrypt Fonksiyonları**
+   - **Özellik:** Bu fonksiyonlar Verbatim şifreleme algoritması kullanarak veriyi şifreler veya şifre çözer.
+   - **Geliştirici Özelliği:** `ADMIN_DEBUG` kullanarak şifreleme veya şifre çözme sürecinin ayrıntılarını `printf` ifadeleriyle detaylı bir şekilde izleyebilirsiniz. Bu, şifreleme ve şifre çözmenin doğruluğunu kontrol etmek için faydalı olabilir.
+
+2. **embedMessage ve extractMessage Fonksiyonları**
+   - **Özellik:** Bu fonksiyonlar şifreli metni resme gömer veya resimden çıkarır.
+   - **Geliştirici Özelliği:** `ADMIN_DEBUG` kullanarak `printf` ifadeleriyle şifrelenen ve çıkarılan mesajı onaltılık formatta görüntüleyebilirsiniz. Bu, mesajın doğruluğunu kontrol etmek için faydalı olabilir.
+
+3. **embedRandomKey ve extractRandomKey Fonksiyonları**
+   - **Özellik:** Bu fonksiyonlar rastgele anahtarın resme gömülmesine veya çıkarılmasına izin verir.
+   - **Geliştirici Özelliği:** `ADMIN_DEBUG` kullanarak gömülen veya çıkarılan rastgele anahtarın değerlerini görüntüleyebilirsiniz. Bu, rastgele anahtarın doğru bir şekilde işlendiğini doğrulamak için faydalı olabilir.
+
+4. **Diğer Yardımcı Fonksiyonlar**
+   - **Özellik:** `printHex`, `stringLength`, `printSeparatedData`, `generateRandomKey` gibi fonksiyonlar yardımcı işlemleri gerçekleştirir.
+   - **Geliştirici Özelliği:** Belirli adımların veya verilerin iç durumunu `ADMIN_DEBUG` kullanarak `printf` ifadeleriyle gösterir. Bu şekilde, herhangi bir adımın beklenmeyen bir durumda olup olmadığını anlamak ve kodun çalışma sürecini anlamak daha kolay hale gelebilir.
+
+   Bu `ADMIN_DEBUG` özelliği, geliştiricilere kodun izlenmesi, hata ayıklama ve fonksiyonların doğrulanması sürecinde yardımcı olmak için kullanılabilir. Ancak, normal kullanıcı ortamında, genellikle böyle detaylı çıktılar kapatılır, çünkü ek çıktılar performansı etkileyebilir ve güvenlik riski oluşturabilir.
+
+
+# ENGLISH
 # Encryption-and-Decryption-of-Data-Embedded-in-Visual-Content
 
 Please review the attached report titled `Cryptography Project Report` for detailed information.
