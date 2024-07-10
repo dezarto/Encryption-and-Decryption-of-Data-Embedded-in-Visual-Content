@@ -15,11 +15,12 @@
 #define ADMIN_SIZE 20 // admin username and surname size
 #define MAX_FIELDS 10  // maximum size to separate text
 
-#define ADMIN_DEBUG 0 /*
+#define ADMIN_DEBUG 1 /*
                         This is developer and admin mode,
                         if set to 1 it will work and
                         if set to 0 it will not work.
                       */
+#define VALIDATIONS_CONTROL 0 // You can control validations on/off
                       //==================  preprocessing identification END ==================
 
                       //==================  implementation of function -START ===============================
@@ -27,6 +28,7 @@ void vernamDecrypt(char* text, const short size, const char* key, const short ke
 void vernamEncrypt(char* text, const char* key, const short size, const short keyLen);
 unsigned short int encryptData(FILE* imageFile);
 void printHex(const char* text, const short size);
+void printDec(const char* text, const short size);
 void extractMessage(FILE* image, const short size, const char* key);
 void embedMessage(FILE* image, const char* message, const short size);
 unsigned short int stringLength(const char* text);
@@ -59,7 +61,7 @@ int main() {
                 printf("Enter a password: ");
                 scanf("%s", passw);
 
-                if (strcmp(username, "admin") == 0 && strcmp(passw, "admin2") == 0) {
+                if (strcmp(username, "admin") == 0 && strcmp(passw, "admin") == 0) {
                     // Admin access granted
                     printf("\nThere is an admin around, run away :)\n\n");
                     break;
@@ -75,72 +77,76 @@ int main() {
             }
         }
         else {
-            printf("Okay, no problem! bye...\n");
+            printf("Only the Administrator can run this program, not you. Okay, no problem! bye...\n");
             return 1;
         }
     }
 #endif
 
-    // Normal user flow
-    printf("Please enter the image name (must be a maximum of 100 characters and a .bmp image): ");
-    scanf("%100s", imageName);
+    while (1) {
+        // Normal user flow
+        printf("Please enter the image name (must be a maximum of 100 characters and a .bmp image): ");
+        scanf("%100s", imageName);
 
-    FILE* imageFile = fopen(imageName, "rb+");
+        FILE* imageFile = fopen(imageName, "rb+");
 
-    if (imageFile == NULL) {
-        printf("Error opening the file.\n");
-        return 1;
-    }
-
-    printf("Select the operation (encrypt (e)/decrypt (d)): ");
-    scanf("%s", operation);
-    printf("\n");
-
-    if (strcmp(operation, "e") == 0) {
-        // Create new image name
-        char* dot = strrchr(imageName, '.');
-        if (dot != NULL) {
-            *dot = '\0';
+        if (imageFile == NULL) {
+            printf("Error opening the file. Try again..\n");
         }
-        strcat(imageName, "_encrypted.bmp");
+        else {
+            printf("Select the operation (encrypt (e)/decrypt (d)): ");
+            scanf("%s", operation);
+            printf("\n");
 
-        FILE* newImageFile = fopen(imageName, "wb");
+            if (strcmp(operation, "e") == 0) {
+                // Create new image name
+                char* dot = strrchr(imageName, '.');
+                if (dot != NULL) {
+                    *dot = '\0';
+                }
+                strcat(imageName, "_encrypted.bmp");
 
-        if (newImageFile == NULL) {
-            printf("Error creating the new file.\n");
-            fclose(imageFile);
-            return 1;
-        }
+                FILE* newImageFile = fopen(imageName, "wb");
 
-        // Copy original image to new image file
-        char buffer[1024];
-        size_t bytesRead;
-        while ((bytesRead = fread(buffer, 1, sizeof(buffer), imageFile)) > 0) {
-            fwrite(buffer, 1, bytesRead, newImageFile);
-        }
+                if (newImageFile == NULL) {
+                    printf("Error creating the new file.\n");
+                    fclose(imageFile);
+                    return 1;
+                }
 
-        fseek(imageFile, 0, SEEK_SET);
-        fseek(newImageFile, 0, SEEK_SET);
+                // Copy original image to new image file
+                char buffer[1024];
+                size_t bytesRead;
+                while ((bytesRead = fread(buffer, 1, sizeof(buffer), imageFile)) > 0) {
+                    fwrite(buffer, 1, bytesRead, newImageFile);
+                }
 
+                fseek(imageFile, 0, SEEK_SET);
+                fseek(newImageFile, 0, SEEK_SET);
 
-        size = encryptData(newImageFile);
+                size = encryptData(newImageFile);
 
-        fclose(newImageFile);
-    }
-    else if (strcmp(operation, "d") == 0) {
-        extractRandomKey(imageFile, extractedData, 11);
+                fclose(newImageFile);
+
+                return 0;
+            }
+            else if (strcmp(operation, "d") == 0) {
+                extractRandomKey(imageFile, extractedData, 11);
 #if ADMIN_DEBUG
-        printf("\nExtracted random key: %s\n", extractedData);
+                printf("\nExtracted random key: %s\n", extractedData);
 #endif
-        extractMessage(imageFile, size, extractedData);
-        printf("\nSee you soon stranger\n");
-    }
-    else {
-        printf("Invalid operation!\n");
-    }
+                extractMessage(imageFile, size, extractedData);
+                printf("\nSee you soon stranger\n");
 
-    fclose(imageFile);
+                return 0;
+            }
+            else {
+                printf("Invalid operation!\n");
+            }
 
+            fclose(imageFile);
+        }
+    }
     return 0;
 }
 //==================  main function END ===============================
@@ -165,8 +171,9 @@ unsigned short int encryptData(FILE* imageFile) {
         scanf("%10s", birthday);
         printf("Gender (F or M): ");
         scanf("%2s", gender);
-
+#if VALIDATIONS_CONTROL
         if (validateInput(name, surname, ssn, timeValue, birthday, gender)) {
+#endif
             printf("All inputs are valid.\n");
 
             printf("\n\tYour name and surname: %s %s\n\tSSN: %s\n\tTime: %s\n\tBirthday: %s\n\tGender: %s",
@@ -192,6 +199,8 @@ unsigned short int encryptData(FILE* imageFile) {
 #if ADMIN_DEBUG
                 printf("\nEncrypted Data (Hex): ");
                 printHex(ciphertext, textLen);
+                printf("\nEncrypted Data (Dec): ");
+                printDec(ciphertext, textLen);
                 printf("\nRandom key: %s\n", randomKey);
 #endif
                 embedMessage(imageFile, ciphertext, textLen);
@@ -203,10 +212,12 @@ unsigned short int encryptData(FILE* imageFile) {
             else {
                 printf("\nRe-enter all information...\n");
             }
+#if VALIDATIONS_CONTROL
         }
         else {
             printf("One or more inputs are invalid.\n");
         }
+#endif
     } while (answer != 'y');
 
     return 0;
@@ -226,10 +237,18 @@ unsigned short int stringLength(const char* text) {
 //==================  printHex function -START ===============================
 void printHex(const char* text, const short size) {
     for (size_t i = 0; i < size; i++) {
-        printf("%02X", (unsigned char)text[i]);
+        printf("%02X ", (unsigned char)text[i]);
     }
 }
 //==================  printHex function END ===============================
+
+//==================  printDecimal function -START ===============================
+void printDec(const char* text, const short size) {
+    for (size_t i = 0; i < size; i++) {
+        printf("%d ", (unsigned char)text[i]);
+    }
+}
+//==================  printDecimal function END ===============================
 
 //==================  embedMessage function -START ===============================
 void embedMessage(FILE* image, const char* message, const short size) {
@@ -249,7 +268,7 @@ void embedMessage(FILE* image, const char* message, const short size) {
             offset--;
         }
     }
-    printf("\nMessage successfully embed!");
+    printf("\nMessage successfully embed! ");
 }
 //==================  embedMessage function END ===============================
 
@@ -386,7 +405,7 @@ void vernamEncrypt(char* text, const char* key, const short size, const short ke
     for (size_t i = 0; i < size; ++i) {
 
 #if ADMIN_DEBUG
-        printf("\nBefore: %d\n", text[i]);
+        printf("\nBefore decimal: %d, hexadecimal: %X, text: %c\n", text[i], text[i], text[i]);
 #endif
 
         text[i] = text[i] ^ key[i % keyLen];
@@ -399,9 +418,8 @@ void vernamEncrypt(char* text, const char* key, const short size, const short ke
         }
 
 #if ADMIN_DEBUG
-        printf("After: %d\n", text[i]);
+        printf("After decimal: %d, hexadecimal: %X, text: %c\n", text[i], text[i], text[i]);
 #endif
-
     }
 }
 //==================  vernamEncrypt function END ===============================
