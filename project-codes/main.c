@@ -21,21 +21,27 @@
                         if set to 0 it will not work.
                       */
 #define VALIDATIONS_CONTROL 0 // You can control validations on/off
-                      //==================  preprocessing identification END ==================
+//==================  preprocessing identification END ==================
 
-                      //==================  implementation of function -START ===============================
-void vernamDecrypt(char* text, const short size, const char* key, const short keyLen);
+//==================  implementation of function -START ===============================
 void vernamEncrypt(char* text, const char* key, const short size, const short keyLen);
+void vernamDecrypt(char* text, const short size, const char* key, const short keyLen);
+
 unsigned short int encryptData(FILE* imageFile);
-void printHex(const char* text, const short size);
-void printDec(const char* text, const short size);
-void extractMessage(FILE* image, const short size, const char* key);
+
 void embedMessage(FILE* image, const char* message, const short size);
+void extractMessage(FILE* image, const short size, const char* key);
+
 unsigned short int stringLength(const char* text);
 void printSeparatedData(const char* text);
+
+char* generateRandomKey(int length);
 void embedRandomKey(FILE* image, const char* data, const int length);
 void extractRandomKey(FILE* image, char* extractedData, const int length);
-char* generateRandomKey(int length);
+
+void printHex(const char* text, const short size);
+void printDec(const char* text, const short size);
+
 int validateInput(const char* name, const char* surname, const char* ssn, const char* timeValue, const char* birthday, const char* gender);
 int isValidSSN(const char* ssn);
 int isValidTime(const char* time);
@@ -254,7 +260,7 @@ void printDec(const char* text, const short size) {
 void embedMessage(FILE* image, const char* message, const short size) {
     fseek(image, 0, SEEK_END);
     long fileSize = ftell(image);
-    long offset = fileSize - 1;
+    long offset = fileSize - 54;
 
     for (size_t i = 0; i < size; ++i) {
         char ch = message[i];
@@ -278,7 +284,7 @@ void extractMessage(FILE* image, const short size, const char* key) {
     memset(extractedMessage, 0, MESSAGE_SIZE);
     fseek(image, 0, SEEK_END);
     long fileSize = ftell(image);
-    long offset = fileSize - 1;
+    long offset = fileSize - 54;
     int index = 0;
     char ch = 0;
 
@@ -296,7 +302,9 @@ void extractMessage(FILE* image, const short size, const char* key) {
                     printf("\nExtracted Message: %s\n", extractedMessage);
                     printf("\nExtracted Message Data (Hex): ");
                     printHex(extractedMessage, size);
-#endif
+                    printf("\nEncrypted Message Data (Dec): ");
+                    printDec(extractedMessage, size);
+#endif              
                     vernamDecrypt(extractedMessage, size, key, 11);
 #if ADMIN_DEBUG
                     printf("\nDecrypted Message: %s\n", extractedMessage);
@@ -428,12 +436,15 @@ void vernamEncrypt(char* text, const char* key, const short size, const short ke
 void vernamDecrypt(char* text, const short size, const char* key, const short keyLen) {
 
     for (size_t i = 0; i < size; ++i) {
+        printf("\nBefore decimal: %d, hexadecimal: %X, text: %c\n", text[i], text[i], text[i]);
         if (text[i] == '?') {
             text[i] = '\0'; // ? with ASCII code 63 We replace the character with the NULL character whose ASCII code is 0.
             text[i] = text[i] ^ key[i % keyLen];
+            printf("After decimal: %d, hexadecimal: %X, text: %c\n", text[i], text[i], text[i]);
         }
         else {
             text[i] = text[i] ^ key[i % keyLen];
+            printf("After decimal: %d, hexadecimal: %X, text: %c\n", text[i], text[i], text[i]);
         }
     }
 }
