@@ -304,6 +304,7 @@ void extractMessage(FILE* image, const short size, const char* key) {
                     printHex(extractedMessage, size);
                     printf("\nEncrypted Message Data (Dec): ");
                     printDec(extractedMessage, size);
+                    printf("\n\n");
 #endif              
                     vernamDecrypt(extractedMessage, size, key, 11);
 #if ADMIN_DEBUG
@@ -418,7 +419,7 @@ void vernamEncrypt(char* text, const char* key, const short size, const short ke
 
         text[i] = text[i] ^ key[i % keyLen];
         if (text[i] == '\0') {
-            text[i] = '?'; /*NULL value corresponds to 0.
+            text[i] = (char)255; /*NULL value corresponds to 0.
                             There is a problem when extracting the data.
                             We replace it with a question mark
                             corresponding to the value 63 in the ASCII table.*/
@@ -437,7 +438,7 @@ void vernamDecrypt(char* text, const short size, const char* key, const short ke
 
     for (size_t i = 0; i < size; ++i) {
         printf("\nBefore decimal: %d, hexadecimal: %X, text: %c\n", text[i], text[i], text[i]);
-        if (text[i] == '?') {
+        if (text[i] == (char)255) {
             text[i] = '\0'; // ? with ASCII code 63 We replace the character with the NULL character whose ASCII code is 0.
             text[i] = text[i] ^ key[i % keyLen];
             printf("After decimal: %d, hexadecimal: %X, text: %c\n", text[i], text[i], text[i]);
