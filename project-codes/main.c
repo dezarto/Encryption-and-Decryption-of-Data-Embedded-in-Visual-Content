@@ -20,17 +20,17 @@
                         if set to 1 it will work and
                         if set to 0 it will not work.
                       */
-#define VALIDATIONS_CONTROL 0 // You can control validations on/off
-//==================  preprocessing identification END ==================
+#define VALIDATIONS_CONTROL 1 // You can control validations on/off
+                      //==================  preprocessing identification END ==================
 
-//==================  implementation of function -START ===============================
+                      //==================  implementation of function -START ===============================
 void vernamEncrypt(char* text, const char* key, const short size, const short keyLen);
 void vernamDecrypt(char* text, const short size, const char* key, const short keyLen);
 
 unsigned short int encryptData(FILE* imageFile);
 
 void embedMessage(FILE* image, const char* message, const short size);
-void extractMessage(FILE* image, const short size, const char* key);
+void extractMessage(FILE* image, const char* key);
 
 unsigned short int stringLength(const char* text);
 void printSeparatedData(const char* text);
@@ -141,7 +141,7 @@ int main() {
 #if ADMIN_DEBUG
                 printf("\nExtracted random key: %s\n", extractedData);
 #endif
-                extractMessage(imageFile, size, extractedData);
+                extractMessage(imageFile, extractedData);
                 printf("\nSee you soon stranger\n");
 
                 return 0;
@@ -262,6 +262,19 @@ void embedMessage(FILE* image, const char* message, const short size) {
     long fileSize = ftell(image);
     long offset = fileSize - 54;
 
+    // Embed message size first
+    uint16_t messageSize = size;
+    for (int i = 15; i >= 0; --i) {
+        fseek(image, offset, SEEK_SET);
+        uint8_t pixel;
+        fread(&pixel, sizeof(uint8_t), 1, image);
+        pixel = (pixel & 0xFE) | ((messageSize >> i) & 1);
+        fseek(image, offset, SEEK_SET);
+        fwrite(&pixel, sizeof(uint8_t), 1, image);
+        offset--;
+    }
+
+    // Embed message
     for (size_t i = 0; i < size; ++i) {
         char ch = message[i];
         for (int j = 7; j >= 0; --j) {
@@ -276,19 +289,35 @@ void embedMessage(FILE* image, const char* message, const short size) {
     }
     printf("\nMessage successfully embed! ");
 }
+
 //==================  embedMessage function END ===============================
 
 //==================  extractMessage function -START ===============================
-void extractMessage(FILE* image, const short size, const char* key) {
+void extractMessage(FILE* image, const char* key) {
     char extractedMessage[MESSAGE_SIZE];
     memset(extractedMessage, 0, MESSAGE_SIZE);
     fseek(image, 0, SEEK_END);
     long fileSize = ftell(image);
     long offset = fileSize - 54;
+    uint16_t messageSize = 0;
+
+    // Extract message size first
+    for (int i = 15; i >= 0; --i) {
+        fseek(image, offset, SEEK_SET);
+        uint8_t pixel;
+        fread(&pixel, sizeof(uint8_t), 1, image);
+        messageSize = (messageSize << 1) | (pixel & 1);
+        offset--;
+    }
+
+#if ADMIN_DEBUG
+    printf("\nExtracted message size: %d\n", messageSize);
+#endif
+
     int index = 0;
     char ch = 0;
 
-    while (1) {
+    while (index < messageSize * 8) {
         for (int j = 7; j >= 0; --j) {
             fseek(image, offset, SEEK_SET);
             uint8_t pixel;
@@ -297,29 +326,32 @@ void extractMessage(FILE* image, const short size, const char* key) {
             offset--;
 
             if (++index % 8 == 0) {
-                if (ch == '\0') {
-#if ADMIN_DEBUG
-                    printf("\nExtracted Message: %s\n", extractedMessage);
-                    printf("\nExtracted Message Data (Hex): ");
-                    printHex(extractedMessage, size);
-                    printf("\nEncrypted Message Data (Dec): ");
-                    printDec(extractedMessage, size);
-                    printf("\n\n");
-#endif              
-                    vernamDecrypt(extractedMessage, size, key, 11);
-#if ADMIN_DEBUG
-                    printf("\nDecrypted Message: %s\n", extractedMessage);
-#endif
-                    printf("\nDecrypted and Extracted Message:\n\n");
-                    printSeparatedData(extractedMessage);
-                    return;
-                }
                 extractedMessage[(index / 8) - 1] = ch;
                 ch = 0;
             }
         }
     }
+    extractedMessage[messageSize] = '\0'; // Ensure null termination
+
+#if ADMIN_DEBUG
+    printf("\nExtracted Message: %s\n", extractedMessage);
+    printf("\nExtracted Message Data (Hex): ");
+    printHex(extractedMessage, messageSize);
+    printf("\nEncrypted Message Data (Dec): ");
+    printDec(extractedMessage, messageSize);
+    printf("\n\n");
+#endif
+
+    vernamDecrypt(extractedMessage, messageSize, key, 11);
+
+#if ADMIN_DEBUG
+    printf("\nDecrypted Message: %s\n", extractedMessage);
+#endif
+
+    printf("\nDecrypted and Extracted Message:\n\n");
+    printSeparatedData(extractedMessage);
 }
+
 //==================  extractMessage function END ===============================
 
 //==================  embedRandomKey function -START ===============================
@@ -450,6 +482,8 @@ void vernamDecrypt(char* text, const short size, const char* key, const short ke
     }
 }
 //==================  vernamDecrypt function END ===============================
+
+
 
 //==================  Validation function -START ===============================
 int validateInput(const char* name, const char* surname, const char* ssn, const char* timeValue, const char* birthday, const char* gender) {
