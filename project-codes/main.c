@@ -10,7 +10,6 @@
 //==================  library definitions END ==================
 
 //==================  preprocessing identification -START ==================
-#define BMP_HEADER_SIZE 54 // image title size
 #define MESSAGE_SIZE 240 // message size 
 #define ADMIN_SIZE 20 // admin username and surname size
 #define MAX_FIELDS 10  // maximum size to separate text
@@ -21,13 +20,13 @@
                         if set to 0 it will not work.
                       */
 #define VALIDATIONS_CONTROL 1 // You can control validations on/off
-                      //==================  preprocessing identification END ==================
+//==================  preprocessing identification END ==================
 
-                      //==================  implementation of function -START ===============================
+//==================  implementation of function -START ===============================
 void vernamEncrypt(char* text, const char* key, const short size, const short keyLen);
 void vernamDecrypt(char* text, const short size, const char* key, const short keyLen);
 
-unsigned short int encryptData(FILE* imageFile);
+void encryptData(FILE* imageFile);
 
 void embedMessage(FILE* image, const char* message, const short size);
 void extractMessage(FILE* image, const char* key);
@@ -52,7 +51,7 @@ int isValidGender(const char* gender);
 //==================  main function -START ===============================
 int main() {
     char imageName[100], operation[2], answer, passw[ADMIN_SIZE], username[ADMIN_SIZE], extractedData[120];
-    unsigned short int size = 200, counter = 0;
+    unsigned short int size, counter = 0;
 
 #if ADMIN_DEBUG
     // Admin mode for debug
@@ -130,7 +129,7 @@ int main() {
                 fseek(imageFile, 0, SEEK_SET);
                 fseek(newImageFile, 0, SEEK_SET);
 
-                size = encryptData(newImageFile);
+                encryptData(newImageFile);
 
                 fclose(newImageFile);
 
@@ -142,7 +141,7 @@ int main() {
                 printf("\nExtracted random key: %s\n", extractedData);
 #endif
                 extractMessage(imageFile, extractedData);
-                printf("\nSee you soon stranger\n");
+                printf("\nSee you soon stranger!\n");
 
                 return 0;
             }
@@ -158,7 +157,7 @@ int main() {
 //==================  main function END ===============================
 
 //==================  encryptData function -START ===============================
-unsigned short int encryptData(FILE* imageFile) {
+void encryptData(FILE* imageFile) {
     char name[40], surname[30], ssn[12], timeValue[10],
         birthday[11], gender[3],
         plaintext[MESSAGE_SIZE], ciphertext[MESSAGE_SIZE], answer = 'n';
@@ -212,8 +211,6 @@ unsigned short int encryptData(FILE* imageFile) {
                 embedMessage(imageFile, ciphertext, textLen);
 
                 embedRandomKey(imageFile, randomKey, key_size);
-
-                return textLen;
             }
             else {
                 printf("\nRe-enter all information...\n");
@@ -225,8 +222,6 @@ unsigned short int encryptData(FILE* imageFile) {
         }
 #endif
     } while (answer != 'y');
-
-    return 0;
 }
 //==================  encryptData function END ===============================
 
